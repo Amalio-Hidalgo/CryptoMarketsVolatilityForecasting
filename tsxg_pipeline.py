@@ -5,7 +5,6 @@
 # Input  : X (wide DataFrame indexed by 'date'), y (aligned Series)
 # Output : dict with {'final_features', 'xgb_model', 'evaluation_metrics', 'test_pred'}
 # Deps   : numpy, pandas, tsfresh, xgboost, scikit-learn, matplotlib
-# Notes  : No dask/polars; minimal changes to your notebook style.
 # ---------------------------------------------------------------------
 
 import numpy as np
@@ -184,3 +183,4 @@ def make_optuna_objective(X, y, split_ratio=0.10, njobs=18, plot=False):
         return mase if mase == mase else 1e9  # handle NaN -> large penalty
 
     return objective
+
