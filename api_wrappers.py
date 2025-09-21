@@ -5,6 +5,7 @@ from dune_client.client import DuneClient
 from dune_client.query import QueryBase
 import os
 import dotenv
+import time
 # expects these globals to be defined by the notebook:
 # TIMEZONE, DAYS_BACK, TARGET_COIN, CG_TOP_N, CG_HEADERS,
 # DUNE_CSV_PATH, FRED_API_KEY (env)
@@ -20,7 +21,7 @@ def cg_universe(n, cg_headers):
 def cgpriceactiondaily(coins, days, timezone, cg_headers):
     end   = int(dt.datetime.now(dt.timezone.utc).timestamp()) * 1000
     start = int((dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=days)).timestamp()) * 1000
-    out = None
+    count= 0
     for c in coins:
         try:
             url = f"https://api.coingecko.com/api/v3/coins/{c}/market_chart/range?vs_currency=usd&from={start}&to={end}"
@@ -35,11 +36,14 @@ def cgpriceactiondaily(coins, days, timezone, cg_headers):
             df.index = df.index.tz_convert(timezone).tz_localize(None)
             df = df.resample("1D").last().dropna(how="any")
             df.index.name = "date"
-            out = df if out is None else out.join(df, how="inner")
-        except Exception:
+            if count ==0: out = df
+            else: out = out.join(df, how='inner')
+            count= count+1
+        except Exception as e:
+            print(f"Error for {c}: {e}")
             continue
-    return out if out is not None else pd.DataFrame()
-
+        time.sleep(2)  # Add delay to avoid rate limits
+    return out
 # --- Deribit DVOL ---
 def deribit_dvol_daily_multi(currencies, days, timezone, resolution="1D"):
     out = None
